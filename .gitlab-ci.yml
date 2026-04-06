@@ -4,6 +4,14 @@ stages:
 build:
   stage: build
   image: python:3.13
+  cache:
+    key:
+      files:
+        - "*/requirements.txt"
+    paths:
+      - .pip-cache/
+  variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
   script:
     - apt-get update && apt-get install -y zip
     - |
