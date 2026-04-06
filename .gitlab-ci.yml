@@ -1,5 +1,6 @@
 stages:
   - build
+  - deploy
 
 build:
   stage: build
@@ -26,3 +27,12 @@ build:
   artifacts:
     paths:
       - "*/function.zip"
+
+deploy:
+  stage: deploy
+  trigger:
+    project: dmarc-analyser/cdk
+    branch: main
+    strategy: depend
+  only:
+    - main
