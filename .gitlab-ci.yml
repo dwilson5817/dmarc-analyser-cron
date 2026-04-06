@@ -1,0 +1,19 @@
+stages:
+  - build
+
+build:
+  stage: build
+  image: python:3.13
+  script:
+    - |
+      for dir in */; do
+        if [ -f "${dir}requirements.txt" ]; then
+          echo "Building ${dir%/}..."
+          pip install -r "${dir}requirements.txt" -t "${dir}package/"
+          cp "${dir}main.py" "${dir}package/"
+          (cd "${dir}package" && zip -r "../function.zip" .)
+        fi
+      done
+  artifacts:
+    paths:
+      - "*/function.zip"
