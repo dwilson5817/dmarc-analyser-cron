@@ -5,6 +5,7 @@ build:
   stage: build
   image: python:3.13
   script:
+    - apt-get update && apt-get install -y zip
     - |
       for dir in */; do
         if [ -f "${dir}requirements.txt" ]; then
