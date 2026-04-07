@@ -1,5 +1,6 @@
 import os
 import xml.etree.ElementTree as ET
+from urllib.parse import unquote_plus
 
 import boto3
 from aws_lambda_powertools.utilities.typing import LambdaContext
@@ -77,7 +78,7 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
 def handler(event: dict, context: LambdaContext):
     for s3_record in event['Records']:
         bucket = s3_record['s3']['bucket']['name']
-        key = s3_record['s3']['object']['key']
+        key = unquote_plus(s3_record['s3']['object']['key'])
 
         response = s3.get_object(Bucket=bucket, Key=key)
         xml_data = response['Body'].read()
