@@ -79,7 +79,8 @@ def handler(event: dict, context: LambdaContext):
         access_key=credentials.access_key,
         secret_key=credentials.secret_key,
         session_token=credentials.token,
-        role=vault_role
+        role=vault_role,
+        region=os.environ['AWS_REGION'],
     )
 
     accounts = vault.secrets.kv.v2.list_secrets(path='accounts', mount_point=vault_engine_mount_point)
