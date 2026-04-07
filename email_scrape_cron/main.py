@@ -13,7 +13,7 @@ from aws_lambda_powertools.utilities.typing import LambdaContext
 
 s3_bucket = os.environ['S3_BUCKET']
 vault_engine_mount_point = os.environ.get('VAULT_ENGINE_MOUNT_POINT', 'secret')
-vault_iam_role_arn = os.environ['VAULT_IAM_ROLE_ARN']
+vault_role = os.environ['VAULT_ROLE']
 
 s3 = boto3.client('s3')
 
@@ -79,7 +79,7 @@ def handler(event: dict, context: LambdaContext):
         access_key=credentials.access_key,
         secret_key=credentials.secret_key,
         session_token=credentials.token,
-        role=vault_iam_role_arn
+        role=vault_role
     )
 
     accounts = vault.secrets.kv.v2.list_secrets(path='accounts', mount_point=vault_engine_mount_point)
