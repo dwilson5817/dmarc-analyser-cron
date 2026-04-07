@@ -49,7 +49,15 @@ upload:
       for zip in */function.zip; do
         dir="${zip%/function.zip}"
         echo "Uploading ${dir}..."
-        aws s3 cp "$zip" "s3://$ARTIFACTS_BUCKET_NAME/dmarc-analyser-cron/${dir}/function.zip"
+        VERSION=$(aws s3api put-object \
+          --bucket $ARTIFACTS_BUCKET_NAME \
+          --key "dmarc-analyser-cron/${dir}/function.zip" \
+          --body "$zip" \
+          --query VersionId --output text)
+        aws ssm put-parameter \
+          --name "/dmarc-analyser/artifacts/cron/${dir}/version" \
+          --value $VERSION \
+          --type String --overwrite
       done
   only:
     - main
