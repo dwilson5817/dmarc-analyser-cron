@@ -90,4 +90,11 @@ def handler(event: dict, context: LambdaContext):
             for record_item in record_items:
                 batch.put_item(Item=record_item)
 
+        domain = report_item['PK'].removeprefix('DOMAIN#')
+        table.update_item(
+            Key={'PK': 'META', 'SK': 'DOMAINS'},
+            UpdateExpression='ADD domains :domain',
+            ExpressionAttributeValues={':domain': {domain}},
+        )
+
         print(f"Stored report {report_item['report_id']} with {len(record_items)} records from s3://{bucket}/{key}")
