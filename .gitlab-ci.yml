@@ -3,64 +3,9 @@ stages:
   - upload
   - deploy
 
-build:
-  stage: build
-  image: python:3.13
-  cache:
-    key:
-      files:
-        - "*/requirements.txt"
-    paths:
-      - .pip-cache/
-  variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.pip-cache"
-  script:
-    - apt-get update && apt-get install -y zip
-    - |
-      for dir in */; do
-        if [ -f "${dir}requirements.txt" ]; then
-          echo "Building ${dir%/}..."
-          pip install -r "${dir}requirements.txt" -t "${dir}package/"
-          cp "${dir}main.py" "${dir}package/"
-          (cd "${dir}package" && zip -r "../function.zip" .)
-        fi
-      done
-  artifacts:
-    paths:
-      - "*/function.zip"
-
-upload:
-  stage: upload
-  image:
-    name: amazon/aws-cli
-    entrypoint: [""]
-  id_tokens:
-    AWS_TOKEN:
-      aud: https://gitlab.dylanw.dev
-  script:
-    - export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s"
-        $(aws sts assume-role-with-web-identity
-          --role-arn $ROLE_ARN
-          --role-session-name GitLabCI
-          --web-identity-token $AWS_TOKEN
-          --query 'Credentials.[AccessKeyId,SecretAccessKey,SessionToken]'
-          --output text))
-    - |
-      for zip in */function.zip; do
-        dir="${zip%/function.zip}"
-        echo "Uploading ${dir}..."
-        VERSION=$(aws s3api put-object \
-          --bucket $ARTIFACTS_BUCKET_NAME \
-          --key "dmarc-analyser-cron/${dir}/function.zip" \
-          --body "$zip" \
-          --query VersionId --output text)
-        aws ssm put-parameter \
-          --name "/dmarc-analyser/artifacts/cron/${dir}/version" \
-          --value $VERSION \
-          --type String --overwrite
-      done
-  only:
-    - main
+include:
+  - component: $CI_SERVER_FQDN/infrastructure/cdk-deployment-base/python-lambda-build@1.2.0
+  - component: $CI_SERVER_FQDN/infrastructure/cdk-deployment-base/python-lambda-upload@1.2.0
 
 deploy:
   stage: deploy
