@@ -19,14 +19,15 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
     policy = root.find('policy_published')
 
     report_id = metadata.findtext('report_id')
+    org_name = metadata.findtext('org_name')
     begin_date = int(date_range.findtext('begin'))
     domain = policy.findtext('domain')
 
     report_item = {
         'PK': f'DOMAIN#{domain}',
-        'SK': f'REPORT#{begin_date}#{report_id}',
+        'SK': f'REPORT#{begin_date}#{org_name}#{report_id}',
         'report_id': report_id,
-        'org_name': metadata.findtext('org_name'),
+        'org_name': org_name,
         'org_email': metadata.findtext('email'),
         'begin_date': begin_date,
         'end_date': int(date_range.findtext('end')),
@@ -38,7 +39,7 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
     }
 
     record_items = []
-    for record in root.findall('record'):
+    for index, record in enumerate(root.findall('record')):
         row = record.find('row')
         policy_evaluated = row.find('policy_evaluated')
         identifiers = record.find('identifiers')
@@ -61,8 +62,8 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
             })
 
         record_items.append({
-            'PK': f'REPORT#{report_id}',
-            'SK': f'RECORD#{source_ip}',
+            'PK': f'REPORT#{begin_date}#{org_name}#{report_id}',
+            'SK': f'RECORD#{index}',
             'source_ip': source_ip,
             'count': int(row.findtext('count')),
             'disposition': policy_evaluated.findtext('disposition'),
