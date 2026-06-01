@@ -24,7 +24,9 @@ def decompress(filename: str, data: bytes) -> tuple[str, bytes]:
         return xml_name, gzip.decompress(data)
     if filename.endswith('.xml.zip') or filename.endswith('.zip'):
         with zipfile.ZipFile(io.BytesIO(data)) as zf:
-            xml_name = next(n for n in zf.namelist() if n.endswith('.xml'))
+            xml_name = next((n for n in zf.namelist() if n.endswith('.xml')), None)
+            if xml_name is None:
+                raise ValueError(f"No XML file found in ZIP archive: {filename} (contents: {zf.namelist()})")
             return xml_name, zf.read(xml_name)
     return filename, data
 
