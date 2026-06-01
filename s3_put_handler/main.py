@@ -15,12 +15,22 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
     root = ET.fromstring(xml_data)
 
     metadata = root.find('report_metadata')
+    if metadata is None:
+        raise ValueError("Missing required <report_metadata> element")
     date_range = metadata.find('date_range')
+    if date_range is None:
+        raise ValueError("Missing required <date_range> element")
     policy = root.find('policy_published')
+    if policy is None:
+        raise ValueError("Missing required <policy_published> element")
 
     report_id = metadata.findtext('report_id')
     org_name = metadata.findtext('org_name')
-    begin_date = int(date_range.findtext('begin'))
+    begin_str = date_range.findtext('begin')
+    end_str = date_range.findtext('end')
+    if begin_str is None or end_str is None:
+        raise ValueError("Missing required <begin> or <end> in <date_range>")
+    begin_date = int(begin_str)
     domain = policy.findtext('domain')
 
     report_item = {
@@ -30,7 +40,7 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
         'org_name': org_name,
         'org_email': metadata.findtext('email'),
         'begin_date': begin_date,
-        'end_date': int(date_range.findtext('end')),
+        'end_date': int(end_str),
         'adkim': policy.findtext('adkim', default='r'),
         'aspf': policy.findtext('aspf', default='r'),
         'policy': policy.findtext('p'),
@@ -41,9 +51,17 @@ def parse_report(xml_data: bytes) -> tuple[dict, list[dict]]:
     record_items = []
     for index, record in enumerate(root.findall('record')):
         row = record.find('row')
+        if row is None:
+            raise ValueError(f"Record {index} missing required <row> element")
         policy_evaluated = row.find('policy_evaluated')
+        if policy_evaluated is None:
+            raise ValueError(f"Record {index} missing required <policy_evaluated> element")
         identifiers = record.find('identifiers')
+        if identifiers is None:
+            raise ValueError(f"Record {index} missing required <identifiers> element")
         auth_results_el = record.find('auth_results')
+        if auth_results_el is None:
+            raise ValueError(f"Record {index} missing required <auth_results> element")
 
         source_ip = row.findtext('source_ip')
 
