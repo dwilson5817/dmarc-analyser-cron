@@ -52,6 +52,8 @@ def process_account(account_name: str, credentials: dict) -> None:
         typ, data = M.search(None, 'ALL')
         for num in data[0].split():
             typ, data = M.fetch(num, '(RFC822)')
+            if typ != 'OK':
+                raise RuntimeError(f"IMAP FETCH failed for message {num}: {typ}")
             msg = email.message_from_bytes(data[0][1])
 
             _, to_addr = email.utils.parseaddr(msg['To'])
