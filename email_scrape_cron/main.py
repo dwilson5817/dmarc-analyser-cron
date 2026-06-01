@@ -54,7 +54,8 @@ def process_account(account_name: str, credentials: dict) -> None:
             typ, data = M.fetch(num, '(RFC822)')
             msg = email.message_from_bytes(data[0][1])
 
-            if msg['To'] != credentials['aggregate_reports_addr']:
+            _, to_addr = email.utils.parseaddr(msg['To'])
+            if to_addr != credentials['aggregate_reports_addr']:
                 continue
 
             results = []
